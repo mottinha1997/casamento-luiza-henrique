@@ -307,7 +307,7 @@ p.lead{ font-size:var(--step-1); line-height:1.65; color:var(--brown); font-styl
 /* a aba de cima, que gira para abrir */
 .env-aba{
   position:absolute; left:0; top:0; width:100%; height:52%;
-  transform-origin: 50% 0%; transform: translateZ(2px) rotateX(0deg);
+  transform-origin: 50% 0%; transform: translateZ(2.5px) rotateX(0deg);
   clip-path: polygon(0 0, 100% 0, 50% 100%);
   background: linear-gradient(180deg,#FDF5E6,#EFDFC0);
   box-shadow: 0 6px 14px -8px rgba(87,59,37,.4);
@@ -923,9 +923,13 @@ const Envelope = (() => {
     lacre.style.transform = `translateZ(5px) scale(${1 - .35 * d}) rotate(${14 * d}deg)`;
     lacre.style.opacity   = 1 - trecho(p, .14, .3);
 
-    // ── 2. a aba gira e abre
+    // ── 2. a aba gira e abre, recuando no eixo Z enquanto isso.
+    // Fechada ela precisa estar à frente da frente do envelope (2px); aberta,
+    // atrás do cartão (1px) e do dorso (0). Sem esse recuo a dobradiça dela
+    // fica pousada na borda superior do envelope, à frente do cartão, e o
+    // topo quase branco do gradiente vira uma linha cortando os nomes.
     const a = suave(trecho(p, .26, .52));
-    aba.style.transform = `translateZ(2px) rotateX(${-172 * a}deg)`;
+    aba.style.transform = `translateZ(${(2.5 - 5.5 * a).toFixed(2)}px) rotateX(${-172 * a}deg)`;
 
     // ── 3. o cartão sobe de dentro
     const envH = env.offsetHeight;
