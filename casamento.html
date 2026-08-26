@@ -206,6 +206,147 @@ p.lead{ font-size:var(--step-1); line-height:1.65; color:var(--brown); font-styl
 }
 .is-in .word > span{ transform:none; }
 
+/* ═══ CENA DO ENVELOPE ════════════════════════════════════
+   Primeira dobra: um envelope lacrado com laço de cetim que o
+   visitante abre rolando. O cartão sobe e cresce até virar o site.
+
+   Papel dobrado é plano girando no espaço — exatamente o que
+   preserve-3d faz, na GPU e com o texto vetorial. Por isso a cena
+   é CSS 3D e não WebGL: o convite abre antes de um engine de
+   render terminar de baixar no 4G de quem recebeu o link.        */
+#cena{
+  position:fixed; inset:0; z-index:40;
+  display:grid; place-items:center;
+  perspective: 1500px; perspective-origin: 50% 42%;
+  background: var(--paper);
+  overflow:hidden;
+}
+#cena.fim{ visibility:hidden; pointer-events:none; }
+.palco{ transform-style: preserve-3d; will-change: transform; }
+
+.envelope{
+  --w: min(78vw, 620px);
+  --h: calc(var(--w) / 1.45);
+  position:relative; width: var(--w); height: var(--h);
+  transform-style: preserve-3d;
+}
+
+/* dorso — o fundo interno do envelope */
+.env-dorso{
+  position:absolute; inset:0; transform: translateZ(0);
+  background: linear-gradient(160deg, #EFDFC4, #E5D0AE);
+  box-shadow: 0 30px 70px -30px rgba(87,59,37,.45);
+}
+
+/* o cartão: começa escondido dentro e sobe */
+.env-cartao{
+  position:absolute; left:4%; top:7%; width:92%; height:86%;
+  transform: translateZ(1px); transform-origin: 50% 50%;
+  background: var(--paper);
+  box-shadow: 0 18px 40px -18px rgba(87,59,37,.5);
+  display:grid; place-content:center; justify-items:center; gap:.35em;
+  text-align:center; overflow:hidden;
+}
+/* A arte entra como marca-d'água, não como foto cheia. Além de ser o que
+   um convite impresso realmente é, isso resolve a transição final: cartão
+   e hero enquadram a ilustração de formas diferentes (e no retrato o hero
+   usa outro encaixe), então arte cheia contra arte cheia dava rosto
+   duplicado no dissolve. Creme dissolvendo em arte não tem esse problema. */
+.env-cartao::before{
+  content:""; position:absolute; inset:0; z-index:0;
+  background: url("assets/hero-fundo.jpg") center / cover no-repeat;
+  opacity: calc(.2 * var(--marca, 1));
+}
+.env-cartao > *{ position:relative; z-index:1; }
+.env-cartao img{ width: 14%; min-width:34px; opacity:.9; }
+.env-cartao b{
+  font-family:var(--display); font-weight:400; color:var(--brown);
+  font-size: calc(var(--w) / 9); line-height:1.05;
+}
+.env-cartao i{
+  font-family:var(--serif); font-style:normal; color:var(--brown);
+  font-size: calc(var(--w) / 42); letter-spacing:.3em; text-indent:.3em;
+  text-transform:uppercase;
+}
+
+/* as três abas da frente, com a dobra em diamante do envelope real */
+.env-frente{ position:absolute; inset:0; transform: translateZ(2px); }
+.env-frente span{
+  position:absolute; inset:0; display:block;
+  box-shadow: inset 0 0 0 1px rgba(150,116,74,.16);
+}
+.env-frente .esq{ clip-path: polygon(0 0, 50% 50%, 0 100%);       background: linear-gradient(90deg,#FBF0DC,#F2E3C6); }
+.env-frente .dir{ clip-path: polygon(100% 0, 50% 50%, 100% 100%); background: linear-gradient(270deg,#FBF0DC,#F2E3C6); }
+.env-frente .base{ clip-path: polygon(0 100%, 50% 50%, 100% 100%); background: linear-gradient(0deg,#FCF2E0,#EFDFC0); }
+
+/* a aba de cima, que gira para abrir */
+.env-aba{
+  position:absolute; left:0; top:0; width:100%; height:52%;
+  transform-origin: 50% 0%; transform: translateZ(2px) rotateX(0deg);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  background: linear-gradient(180deg,#FDF5E6,#EFDFC0);
+  box-shadow: 0 6px 14px -8px rgba(87,59,37,.4);
+}
+.env-lacre{
+  position:absolute; left:50%; top:50%; z-index:5;
+  width: calc(var(--w) / 6.4); height: calc(var(--w) / 6.4);
+  margin: calc(var(--w) / -12.8) 0 0 calc(var(--w) / -12.8);
+  border-radius:50%; display:grid; place-items:center;
+  background: radial-gradient(circle at 34% 30%, #D9548A, #A31E52 68%, #7E1640);
+  box-shadow: 0 4px 12px -3px rgba(87,26,58,.6), inset 0 -2px 6px rgba(0,0,0,.22);
+  /* num contexto preserve-3d é o translateZ que decide a ordem,
+     não o z-index: o lacre precisa vir à frente da fita (4px) */
+  transform: translateZ(5px);
+}
+.env-lacre span{
+  font-family:var(--display); color:#FBEAF0;
+  font-size: calc(var(--w) / 17); line-height:1; padding-bottom:.12em;
+}
+
+/* laço de cetim */
+.laco{
+  position:absolute; left:50%; top:50%; z-index:4;
+  width: calc(var(--w) * 1.42); height: calc(var(--w) * 0.71);
+  transform: translate(-50%,-50%) translateZ(4px);
+  overflow:visible;
+}
+/* cada peça gira a partir do nó, como fita de verdade se soltando */
+.laco g{ transform-box: fill-box; }
+#laco-e{ transform-origin: 100% 50%; }
+#laco-d{ transform-origin: 0% 50%; }
+#rabo-e{ transform-origin: 100% 0%; }
+#rabo-d{ transform-origin: 0% 0%; }
+#no,#fita-e,#fita-d{ transform-origin: 50% 50%; }
+
+/* o texto do cartão sai antes do fim, para a última fração da
+   transição ser a arte dissolvendo na arte do hero, sem duplicar nome */
+.env-cartao img, .env-cartao b, .env-cartao i{ opacity: var(--texto, 1); }
+
+.cena-dica{
+  position:absolute; left:50%; bottom: clamp(1.6rem,5vh,3.4rem);
+  transform:translateX(-50%);
+  display:grid; justify-items:center; gap:.6rem;
+  font-family:var(--serif); font-size:var(--step--1);
+  letter-spacing:.34em; text-indent:.34em; text-transform:uppercase;
+  color:var(--ink-faint); white-space:nowrap;
+}
+.cena-dica i{
+  width:1px; height:34px; background:linear-gradient(var(--line),transparent);
+  display:block; position:relative; overflow:hidden;
+}
+.cena-dica i::after{
+  content:""; position:absolute; inset:0 auto auto 0; width:1px; height:12px;
+  background:var(--magenta); animation: cue 2.4s var(--ease) infinite;
+}
+@keyframes cue{ 0%{transform:translateY(-14px);opacity:0;} 30%{opacity:1;} 100%{transform:translateY(34px);opacity:0;} }
+
+/* espaço de rolagem que a cena consome antes do site começar */
+.cena-espaco{ height: 280vh; }
+@media (max-width: 760px){ .cena-espaco{ height: 220vh; } }
+
+/* durante a cena o cabeçalho sai da frente */
+.abrindo .topbar{ opacity:0 !important; pointer-events:none; }
+
 /* ═══ HERO — a ilustração de vocês, sangrando na tela ═════ */
 .hero{
   --band: clamp(46px, 10vw, 168px);
@@ -386,6 +527,15 @@ footer small{
   </filter>
 </svg>
 
+<!-- Sem JS a cena do envelope não teria como se dissolver, e por ser
+     fixa e opaca trancaria o convite. Aqui ela some e o site aparece. -->
+<noscript><style>
+  #cena, #loader{ display:none !important; }
+  .cena-espaco{ height:0 !important; }
+  [data-reveal]{ opacity:1 !important; transform:none !important; }
+  .word > span{ transform:none !important; }
+</style></noscript>
+
 <svg class="grain" aria-hidden="true"><rect width="100%" height="100%" filter="url(#paper-grain)"/></svg>
 <canvas id="petals" aria-hidden="true"></canvas>
 
@@ -416,7 +566,66 @@ footer small{
   </button>
 </header>
 
+<!-- ═══ CENA DO ENVELOPE ═══ -->
+<div id="cena" aria-hidden="true">
+  <div class="palco">
+    <div class="envelope">
+      <div class="env-dorso"></div>
+
+      <div class="env-cartao">
+        <img src="assets/logo.png" alt="">
+        <b>Luiza &amp; Henrique</b>
+        <i>22 . 02 . 2027</i>
+      </div>
+
+      <div class="env-frente">
+        <span class="base"></span><span class="esq"></span><span class="dir"></span>
+      </div>
+
+      <div class="env-aba"></div>
+
+      <svg class="laco" viewBox="0 0 560 280" fill="none">
+        <defs>
+          <linearGradient id="cetim" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stop-color="#E4739F"/>
+            <stop offset="34%"  stop-color="#C0286A"/>
+            <stop offset="62%"  stop-color="#8E1745"/>
+            <stop offset="100%" stop-color="#B62661"/>
+          </linearGradient>
+          <linearGradient id="cetim-laco" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%"   stop-color="#EC8CB2"/>
+            <stop offset="45%"  stop-color="#C0286A"/>
+            <stop offset="100%" stop-color="#8E1745"/>
+          </linearGradient>
+        </defs>
+        <g id="fita-e"><rect x="-20" y="128" width="300" height="24" fill="url(#cetim)"/></g>
+        <g id="fita-d"><rect x="280" y="128" width="300" height="24" fill="url(#cetim)"/></g>
+        <g id="rabo-e">
+          <path d="M270 144 C 258 182, 236 210, 214 246 L 232 253 L 240 239 L 252 250 C 266 212, 276 176, 280 150 Z" fill="url(#cetim)"/>
+        </g>
+        <g id="rabo-d">
+          <path d="M290 144 C 302 182, 324 210, 346 246 L 328 253 L 320 239 L 308 250 C 294 212, 284 176, 280 150 Z" fill="url(#cetim)"/>
+        </g>
+        <g id="laco-e">
+          <path d="M280 140 C 246 112, 196 92, 160 104 C 124 116, 124 158, 158 170 C 194 182, 250 164, 280 140 Z" fill="url(#cetim-laco)"/>
+          <path d="M280 140 C 256 140, 228 150, 208 166 C 232 174, 260 158, 280 140 Z" fill="#7A123B" opacity=".38"/>
+        </g>
+        <g id="laco-d">
+          <path d="M280 140 C 314 112, 364 92, 400 104 C 436 116, 436 158, 402 170 C 366 182, 310 164, 280 140 Z" fill="url(#cetim-laco)"/>
+          <path d="M280 140 C 304 140, 332 150, 352 166 C 328 174, 300 158, 280 140 Z" fill="#7A123B" opacity=".38"/>
+        </g>
+      </svg>
+
+      <!-- o lacre de cera é o próprio nó do laço, segurando a fita -->
+      <div class="env-lacre"><span>L&amp;H</span></div>
+    </div>
+  </div>
+
+  <div class="cena-dica" id="cena-dica"><span>role para abrir</span><i></i></div>
+</div>
+
 <div id="scroll">
+<div class="cena-espaco" aria-hidden="true"></div>
 <main>
 
   <!-- ═══════════ HERO ═══════════  ✎ EDITE: nomes, data, local -->
@@ -597,6 +806,11 @@ const CONFIG = {
 
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+// o convite sempre começa fechado: sem isso, um F5 no meio da página
+// devolve o visitante para o meio da cena, com o envelope já aberto
+if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+addEventListener("beforeunload", () => scrollTo(0, 0));
+
 /* ═══ 1. FLOR DO PRELOADER — tons das peônias da arte ═══ */
 (function flower(){
   const NS = "http://www.w3.org/2000/svg";
@@ -649,6 +863,121 @@ document.querySelectorAll("[data-reveal]").forEach(el => io.observe(el));
    O <body> mantém a altura real do conteúdo (barra de rolagem
    e teclado funcionam normalmente) e #scroll é interpolada
    atrás dele. Em telas de toque usamos scroll nativo.        */
+/* ═══ 4a. A CENA DO ENVELOPE ══════════════════════════════
+   Um único valor de progresso (0 → 1) percorre o espaço de
+   rolagem da cena e alimenta cada peça. Como ele vem do mesmo
+   scroll interpolado do resto do site, a abertura tem o mesmo
+   peso e a mesma inércia da navegação.                        */
+const Envelope = (() => {
+  const cena  = document.getElementById("cena");
+  const espaco = document.querySelector(".cena-espaco");
+  if (!cena || !espaco) return { atualizar(){} };
+
+  if (reduced){ cena.remove(); espaco.style.height = "0px"; return { atualizar(){} }; }
+
+  const palco  = cena.querySelector(".palco");
+  const env    = cena.querySelector(".envelope");
+  const cartao = cena.querySelector(".env-cartao");
+  const aba    = cena.querySelector(".env-aba");
+  const lacre  = cena.querySelector(".env-lacre");
+  const laco   = cena.querySelector(".laco");
+  const dica   = document.getElementById("cena-dica");
+  // o lacre fica de fora: ele tem opacidade própria na fase do laço,
+  // e entrar aqui faria a fase 4 reacendê-lo depois de já ter sumido
+  const cromo  = [cena.querySelector(".env-dorso"), cena.querySelector(".env-frente"), aba];
+  const peca   = id => cena.querySelector("#" + id);
+  const fitaE = peca("fita-e"), fitaD = peca("fita-d");
+  const raboE = peca("rabo-e"), raboD = peca("rabo-d");
+  const lacoE = peca("laco-e"), lacoD = peca("laco-d");
+  const raiz  = document.documentElement;
+
+  const trava  = v => v < 0 ? 0 : v > 1 ? 1 : v;
+  const trecho = (p, a, b) => trava((p - a) / (b - a));
+  const suave  = t => t * t * (3 - 2 * t);
+  const saida  = t => 1 - Math.pow(1 - t, 3);
+
+  // Quanto o cartão sobe, em fração da altura do envelope. Precisa passar
+  // das abas diagonais da frente: abaixo de ~.6 o vinco corta o nome em
+  // diagonal e ele fica ilegível durante boa parte da subida.
+  const SUBIDA = .62;
+  let terminou = false;
+
+  function atualizar(px){
+    // a cena acaba exatamente quando o hero encosta no topo da tela.
+    // O curso é a altura cheia do espaçador — descontar um viewport aqui
+    // encerraria a cena cedo demais e abriria um vão de creme antes do site.
+    const curso = espaco.offsetHeight;
+    const p = trava(curso > 0 ? px / curso : 1);
+
+    // passada a cena, some de vez para não capturar clique
+    if (p >= 1){
+      if (!terminou){
+        cena.style.opacity = "0";
+        cena.classList.add("fim");
+        raiz.classList.remove("abrindo");
+        terminou = true;
+      }
+      return;
+    }
+    if (terminou){ cena.classList.remove("fim"); terminou = false; }
+    raiz.classList.toggle("abrindo", p < .82);
+
+    // ── a dica de rolagem sai assim que a mão se mexe
+    dica.style.opacity = 1 - trecho(p, 0, .1);
+
+    // ── 1. o laço se desfaz: as laçadas giram para fora a partir do
+    //       nó, os rabos escorregam e as fitas saem pelas laterais
+    const d = saida(trecho(p, .06, .32));
+    lacoE.style.transform = `rotate(${-38 * d}deg) scale(${1 - .92 * d})`;
+    lacoD.style.transform = `rotate(${ 38 * d}deg) scale(${1 - .92 * d})`;
+    raboE.style.transform = `translate(${-30 * d}px, ${46 * d}px) rotate(${-16 * d}deg)`;
+    raboD.style.transform = `translate(${ 30 * d}px, ${46 * d}px) rotate(${ 16 * d}deg)`;
+    fitaE.style.transform = `translateX(${-360 * d}px)`;
+    fitaD.style.transform = `translateX(${ 360 * d}px)`;
+    laco.style.opacity    = 1 - trecho(p, .18, .34);
+
+    // o lacre de cera solta junto com a fita que ele segurava
+    lacre.style.transform = `translateZ(5px) scale(${1 - .35 * d}) rotate(${14 * d}deg)`;
+    lacre.style.opacity   = 1 - trecho(p, .14, .3);
+
+    // ── 2. a aba gira e abre
+    const a = suave(trecho(p, .26, .52));
+    aba.style.transform = `translateZ(2px) rotateX(${-172 * a}deg)`;
+
+    // ── 3. o cartão sobe de dentro
+    const envH = env.offsetHeight;
+    const s = saida(trecho(p, .46, .74));
+    cartao.style.transform = `translateZ(1px) translateY(${-SUBIDA * envH * s}px)`;
+
+    // ── 4. o envelope se apaga e o cartão cresce até virar a tela
+    const f = trecho(p, .66, .84);
+    for (const c of cromo) c.style.opacity = 1 - f;
+
+    const cresc = suave(trecho(p, .68, 1));
+    const alvoEscala = Math.max(
+      innerWidth  / cartao.offsetWidth,
+      innerHeight / cartao.offsetHeight
+    ) * 1.04;
+    const escala = 1 + (alvoEscala - 1) * cresc;
+
+    // Enquanto a cena termina, o hero ainda está subindo para o topo — a arte
+    // dele fica centrada na SEÇÃO, não na tela. Sem compensar isso, no dissolve
+    // aparecem duas noivas desencontradas. Aqui o cartão persegue a posição do
+    // hero, e as duas artes chegam sobrepostas no momento da troca.
+    const desloc = Math.max(0, curso - px);
+    const y = SUBIDA * envH * s * escala + desloc * cresc;
+    palco.style.transform = `translateY(${y}px) scale(${escala})`;
+
+    // o texto sai primeiro, depois a marca-d'água: os últimos quadros são
+    // papel liso dissolvendo na arte do hero, sem nada duplicado no meio
+    cartao.style.setProperty("--texto", String(1 - trecho(p, .74, .86)));
+    cartao.style.setProperty("--marca", String(1 - trecho(p, .82, .93)));
+    cena.style.opacity = 1 - trecho(p, .92, 1);
+  }
+
+  return { atualizar };
+})();
+
 const Scroll = (() => {
   const el = document.getElementById("scroll");
   const ativo = matchMedia("(pointer: fine)").matches && !reduced;
@@ -668,6 +997,7 @@ const Scroll = (() => {
     atual += (alvo - atual) * (ativo ? .085 : 1);
     if (Math.abs(alvo - atual) < .08) atual = alvo;
     if (ativo) el.style.transform = `translate3d(0, ${-atual.toFixed(2)}px, 0)`;
+    Envelope.atualizar(atual);
     raiz.classList.toggle("scrolled", alvo > innerHeight * .7);
     requestAnimationFrame(frame);
   })();

@@ -11,6 +11,38 @@ Pages procura. **Ao editar, edite `casamento.html` e depois copie por cima:**
 cp casamento.html index.html
 ```
 
+## A abertura: o envelope
+
+A primeira dobra não é o site — é um envelope lacrado com laço de cetim e um
+lacre de cera com o monograma. O visitante rola, o laço se desfaz, a aba gira,
+o cartão sobe de dentro e cresce até virar a tela. Só então o site começa.
+
+A cena é **CSS 3D**, não WebGL. Papel dobrado é plano girando no espaço, que é
+exatamente o que `transform-style: preserve-3d` faz — na GPU e com o texto
+vetorial. Um engine 3D custaria centenas de KB para reproduzir isso, e o
+convite precisa abrir rápido no 4G de quem recebeu o link.
+
+Todo o movimento sai de **um único valor de progresso de 0 a 1**, calculado a
+partir do scroll. Cada peça (laço, aba, cartão, escala) lê uma faixa desse
+valor. Para mexer no ritmo, ajuste as faixas dentro de `Envelope.atualizar` —
+por exemplo, `trecho(p, .26, .52)` é quando a aba gira.
+
+- **Duração da cena** — `.cena-espaco { height }` no CSS: 280vh no desktop,
+  220vh no celular. Menos deixa a abertura apressada; mais cansa.
+- **Cor da fita** — os gradientes `#cetim` e `#cetim-laco` dentro do SVG do laço.
+- **O que está escrito no cartão** — o bloco `.env-cartao` no HTML.
+
+O cartão é papel creme com o monograma, não uma foto cheia. Isso é o que um
+convite impresso realmente é, e resolve a transição: cartão e hero enquadram a
+ilustração de formas diferentes (no retrato o hero usa outro encaixe), então
+arte cheia contra arte cheia deixava o rosto da noiva duplicado no dissolve.
+Creme dissolvendo em arte não tem esse problema, em nenhuma proporção de tela.
+
+Quem tem `prefers-reduced-motion` ligado no sistema não vê a cena: ela é
+removida e o espaçador zera, entregando o site direto. Sem JavaScript, um
+`<noscript>` faz o mesmo — sem isso a cena, que é fixa e opaca, trancaria o
+convite.
+
 ## Os assets
 
 | Arquivo | O que é | Onde aparece |
@@ -81,7 +113,7 @@ mas as imagens precisam virar URLs absolutas e a edição fica desconfortável.
 
 ## Detalhes que valem saber
 
-- **Primeira dobra**: no desktop a ilustração preenche a tela (`cover`); no
+- **Primeira dobra** (depois do envelope): no desktop a ilustração preenche a tela (`cover`); no
   celular ela encaixa pela largura e ancora no topo, porque a arte é apaisada e
   um `cover` em tela estreita cortaria justamente o casal. A guirlanda é
   sobreposta ao pé do hero, então a moldura floral existe em qualquer proporção
