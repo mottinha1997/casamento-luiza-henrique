@@ -4,13 +4,15 @@
 <meta charset="utf-8"><!--#skel-->
 <meta name="viewport" content="width=device-width, initial-scale=1"><!--#skel-->
 <title>Luiza &amp; Henrique</title>
+<link rel="preload" as="image" href="assets/logo.webp" type="image/webp" fetchpriority="high">
+<link rel="preload" as="image" href="assets/flores.webp" type="image/webp">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Great+Vibes&display=swap">
 
 <style>
 /* ═══════════════════════════════════════════════════════════
-   LUIZA & HENRIQUE — 22 de fevereiro de 2027
+   LUIZA & HENRIQUE — 25 de fevereiro de 2027
    Tudo que muda está marcado com  ✎ EDITE  ao longo do arquivo.
    Imagens em /assets — troque os arquivos mantendo os nomes.
    ═══════════════════════════════════════════════════════════ */
@@ -69,6 +71,13 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 img{ max-width:100%; display:block; }
+/* <picture> criaria uma caixa intermediária que quebra width/height:100%
+   e as margens dos <img>; display:contents devolve o filho ao pai.
+   Junto vem uma pegadinha: sem display:none o <source> também sobe a
+   participante do layout — num flex ele vira um item de largura zero e
+   desloca tudo (foi o que jogou o monograma para o meio do cabeçalho). */
+picture{ display:contents; }
+source{ display:none; }
 ::selection{ background: var(--rose); color:#fff; }
 :focus-visible{ outline:2px solid var(--magenta); outline-offset:4px; border-radius:2px; }
 
@@ -182,12 +191,17 @@ p{ margin:0 0 1.1em; }
 p.lead{ font-size:var(--step-1); line-height:1.65; color:var(--brown); font-style:italic; font-family:var(--serif); }
 
 /* ═══ FAIXA FLORAL (a arte de vocês, usada como divisor) ══
-   A proporção do PNG é 1800×248 (7,26:1). A altura acompanha
-   a largura para a faixa nunca esticar.                      */
+   A guirlanda é 1800×248. Fixar a altura em vw/px cortava as rosas por
+   cima — em tela de 1920 sumiam 100px de flor. Amarrando o elemento à
+   proporção da imagem, ela aparece inteira em qualquer largura.        */
 .floral{
-  position:relative; z-index:1;
-  height: clamp(52px, 9.6vw, 172px);
-  background: url("assets/flores.png") center bottom / 102% auto no-repeat;
+  position:relative; z-index:1; width:100%;
+  aspect-ratio: 1800 / 248;
+  background-image: url("assets/flores.png");
+  background-image: image-set(url("assets/flores.webp") type("image/webp"),
+                              url("assets/flores.png")  type("image/png"));
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
   pointer-events:none;
 }
 .floral.flip{ transform: scaleY(-1); }
@@ -199,7 +213,15 @@ p.lead{ font-size:var(--step-1); line-height:1.65; color:var(--brown); font-styl
   transition-delay: var(--d, 0s);
 }
 [data-reveal].is-in{ opacity:1; transform:none; }
-.word{ display:inline-block; overflow:hidden; vertical-align:top; padding-bottom:.08em; }
+/* O reveal esconde a palavra atrás de overflow:hidden. Great Vibes joga os
+   floreios das maiúsculas muito acima da caixa da fonte, então sem esta folga
+   a máscara decepa o topo do L e do H. O padding aumenta a área de recorte e
+   a margem negativa devolve o mesmo tanto, deixando o layout intacto. */
+.word{
+  display:inline-block; overflow:hidden; vertical-align:top;
+  padding: .34em .1em .2em;
+  margin:  -.34em -.1em -.2em;
+}
 .word > span{
   display:inline-block; transform: translateY(105%) rotate(3deg);
   transition: transform 1.1s var(--ease-out); transition-delay: var(--wd, 0s);
@@ -254,11 +276,14 @@ p.lead{ font-size:var(--step-1); line-height:1.65; color:var(--brown); font-styl
    duplicado no dissolve. Creme dissolvendo em arte não tem esse problema. */
 .env-cartao::before{
   content:""; position:absolute; inset:0; z-index:0;
-  background: url("assets/hero-fundo.jpg") center / cover no-repeat;
+  background-image: url("assets/hero-fundo.jpg");
+  background-image: image-set(url("assets/hero-fundo.webp") type("image/webp"),
+                              url("assets/hero-fundo.jpg")  type("image/jpeg"));
+  background-position: center; background-size: cover; background-repeat: no-repeat;
   opacity: calc(.2 * var(--marca, 1));
 }
-.env-cartao > *{ position:relative; z-index:1; }
-.env-cartao img{ width: 14%; min-width:34px; opacity:.9; }
+.env-cartao > *, .env-cartao img{ position:relative; z-index:1; }
+.env-cartao img{ width: 14%; height:auto; min-width:34px; opacity:.9; }
 .env-cartao b{
   font-family:var(--display); font-weight:400; color:var(--brown);
   font-size: calc(var(--w) / 9); line-height:1.05;
@@ -349,34 +374,48 @@ p.lead{ font-size:var(--step-1); line-height:1.65; color:var(--brown); font-styl
 
 /* ═══ HERO — a ilustração de vocês, sangrando na tela ═════ */
 .hero{
-  --band: clamp(46px, 10vw, 168px);
+  /* a guirlanda ocupa largura ÷ 7,26 — a proporção real do arquivo */
+  --band: min(13.78vw, 190px);
   position:relative; overflow:hidden;
   min-height: 100svh;
   display:grid; align-content:center;
   padding-block: clamp(5.5rem,12vh,8rem) calc(var(--band) + clamp(1.5rem,4vh,3rem));
   text-align:center;
-  background: var(--paper) url("assets/hero-fundo.jpg") center / cover no-repeat;
+  background-color: var(--paper);
+  background-image: url("assets/hero-fundo.jpg");
+  background-image: image-set(url("assets/hero-fundo.webp") type("image/webp"),
+                              url("assets/hero-fundo.jpg")  type("image/jpeg"));
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
 }
-/* Retrato: a arte é apaisada, então em tela estreita o "cover"
-   cortaria justamente o casal. Aqui ela encaixa pela largura e
-   ancora no topo — o creme do papel é o mesmo da ilustração, então
-   a emenda não aparece — e os nomes descem para o creme limpo. */
+/* Retrato: a ilustração sangra na tela inteira e os nomes ficam sobre ela.
+   Antes ela encaixava pela largura e os nomes desciam para o creme abaixo,
+   o que partia a dobra em dois blocos separados. Aqui é uma coisa só. */
 @media (max-aspect-ratio: 3/4){
   .hero{
-    background-size: 124% auto;
-    background-position: center top;
-    align-content: end;
-    padding-top: 46vh;
+    --band: min(19vw, 150px);
+    background-position: center 46%;
+    padding-block: clamp(5rem,11vh,7rem) calc(var(--band) + clamp(1.2rem,3vh,2.4rem));
+  }
+  /* no celular a arte carrega numa versão de 1100px: 60KB no lugar de 180KB */
+  .hero{
+    background-image: url("assets/hero-fundo.jpg");
+    background-image: image-set(url("assets/hero-fundo-sm.webp") type("image/webp"),
+                                url("assets/hero-fundo.jpg")     type("image/jpeg"));
   }
 }
-/* A guirlanda é sobreposta ao pé do hero, então ela existe em
-   qualquer proporção de tela — mesmo quando o "cover" corta as
-   faixas da própria ilustração. O topo fica livre para o
-   monograma e o botão de som respirarem. */
+/* A guirlanda é sobreposta ao pé do hero, então ela existe em qualquer
+   proporção de tela — mesmo quando o "cover" corta as faixas da própria
+   ilustração. O topo fica livre para o monograma e o botão de som. */
 .hero-band{
   position:absolute; left:0; right:0; bottom:-1px; z-index:1; pointer-events:none;
   height: var(--band);
-  background: url("assets/flores.png") center bottom / 102% auto no-repeat;
+  background-image: url("assets/flores.png");
+  background-image: image-set(url("assets/flores.webp") type("image/webp"),
+                              url("assets/flores.png")  type("image/png"));
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
 }
 .hero-kicker{
   font-family:var(--serif); font-style:italic; font-size:var(--step-1);
@@ -384,9 +423,9 @@ p.lead{ font-size:var(--step-1); line-height:1.65; color:var(--brown); font-styl
 }
 .names{
   font-family:var(--display); font-weight:400;
-  font-size:var(--step-4); line-height:1.02;
+  font-size:var(--step-4); line-height:1.16;
   margin:0; color:var(--brown);
-  display:grid; gap: clamp(.1rem,1vw,.6rem);
+  display:grid; gap: clamp(0rem,.4vw,.3rem);
 }
 .names .amp{
   font-family:var(--serif); font-style:italic; font-weight:300;
@@ -412,41 +451,30 @@ p.lead{ font-size:var(--step-1); line-height:1.65; color:var(--brown); font-styl
 .ornament::before, .ornament::after{ content:""; height:1px; flex:1; max-width:110px; background:currentColor; }
 .ornament svg{ width:24px; height:24px; color:var(--magenta); }
 
-/* ═══ HISTÓRIA ════════════════════════════════════════════ */
-.timeline{ display:grid; margin-top:2.6rem; border-top:1px solid var(--line); }
-.moment{
-  display:grid; gap:.35rem 3rem; padding: clamp(1.5rem,3.5vw,2.4rem) 0;
-  border-bottom:1px solid var(--line);
-  grid-template-columns: 1fr;
-}
-@media (min-width:760px){
-  .moment{ grid-template-columns: 10rem 1fr 1fr; align-items:baseline; }
-}
-.moment .when{
-  font-family:var(--serif); font-size:var(--step--1);
-  letter-spacing:.26em; text-indent:.26em; text-transform:uppercase; color:var(--magenta);
-}
-.moment h3{ margin:0; }
-.moment p{ margin:0; font-size:.96em; }
-
 /* ═══ O GRANDE DIA ════════════════════════════════════════ */
 .day{ background: var(--paper-2); }
-.cards{ display:grid; gap: clamp(1rem,3vw,2rem); margin-top:2.6rem; grid-template-columns:1fr; }
-@media (min-width:720px){ .cards{ grid-template-columns:1fr 1fr; } }
+/* com um card só, uma grade de duas colunas deixaria metade da largura
+   vazia: o card fica centrado e com largura de leitura confortável */
+.cards{
+  display:grid; gap: clamp(1rem,3vw,2rem); margin-top:2.6rem;
+  grid-template-columns: minmax(0, 34rem);
+  justify-content:center;
+}
 .card{
   border:1px solid var(--paper-edge); background: rgba(255,252,244,.62);
   padding: clamp(1.6rem,4vw,2.6rem); display:grid; gap:.55rem; align-content:start;
   position:relative;
 }
 .card::after{ content:""; position:absolute; inset:8px; border:1px solid var(--paper-edge); pointer-events:none; opacity:.5; }
+.card{ text-align:center; justify-items:center; }
 .card .hour{
-  font-family:var(--display); font-size:var(--step-2); line-height:1; color:var(--magenta);
+  font-family:var(--display); font-size:var(--step-2); line-height:1.2; color:var(--magenta);
 }
 .card address{ font-style:normal; color:var(--ink-soft); }
 .card .map{
   font-family:var(--serif); font-size:var(--step--1); letter-spacing:.2em;
   text-transform:uppercase; color:var(--brown); text-decoration:none;
-  border-bottom:1px solid var(--line); padding-bottom:.2rem; justify-self:start; margin-top:.4rem;
+  border-bottom:1px solid var(--line); padding-bottom:.2rem; justify-self:center; margin-top:.6rem;
 }
 .card .map:hover{ color:var(--magenta); border-color:var(--magenta); }
 
@@ -495,7 +523,7 @@ footer{
   text-align:center; padding: clamp(3rem,7vh,5rem) var(--gut) clamp(3rem,7vh,5rem);
   background: var(--paper-2); position:relative;
 }
-.foot-logo{ width: clamp(70px, 10vw, 104px); margin:0 auto 1.4rem; }
+.foot-logo{ width: clamp(70px, 10vw, 104px); height:auto; margin:0 auto 1.4rem; }
 footer p{ margin:.3rem 0; color:var(--brown); }
 footer small{
   display:block; margin-top:2.4rem; font-family:var(--serif); font-size:.74rem;
@@ -552,14 +580,14 @@ footer small{
       </g>
     </svg>
     <div class="loader-meta">
-      <img class="loader-logo" src="assets/logo.png" alt="Monograma de Luiza e Henrique">
+      <picture><source srcset="assets/logo.webp" type="image/webp"><img class="loader-logo" src="assets/logo.png" alt="Monograma de Luiza e Henrique" width="320" height="320" decoding="async"></picture>
       <div class="count"><span id="pct">0</span>%</div>
     </div>
   </div>
 </div>
 
 <header class="topbar">
-  <img class="topbar-logo" src="assets/logo.png" alt="Luiza e Henrique">
+  <picture><source srcset="assets/logo.webp" type="image/webp"><img class="topbar-logo" src="assets/logo.png" alt="Luiza e Henrique" width="320" height="320" decoding="async"></picture>
   <button class="sound" id="sound" type="button" aria-pressed="false">
     <span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
     <span id="sound-label">Música</span>
@@ -573,9 +601,9 @@ footer small{
       <div class="env-dorso"></div>
 
       <div class="env-cartao">
-        <img src="assets/logo.png" alt="">
+        <picture><source srcset="assets/logo.webp" type="image/webp"><img src="assets/logo.png" alt="" width="320" height="320" decoding="async"></picture>
         <b>Luiza &amp; Henrique</b>
-        <i>22 . 02 . 2027</i>
+        <i>25 . 02 . 2027</i>
       </div>
 
       <div class="env-frente">
@@ -639,7 +667,7 @@ footer small{
         <span data-split>Henrique</span>
       </h1>
       <div class="hero-meta" data-reveal style="--d:.5s">
-        <span>22 de fevereiro de 2027</span>
+        <span>25 de fevereiro de 2027</span>
         <span class="dot" aria-hidden="true"></span>
         <span>Extremoz</span>
         <span class="dot" aria-hidden="true"></span>
@@ -670,41 +698,6 @@ footer small{
     </div>
   </section>
 
-  <!-- ═══════════ NOSSA HISTÓRIA ═══════════  ✎ EDITE: os momentos -->
-  <section id="historia">
-    <div class="wrap">
-      <p class="eyebrow" data-reveal>Nossa história</p>
-      <h2 data-reveal data-split style="--d:.06s">Como chegamos até aqui</h2>
-
-      <div class="timeline">
-        <article class="moment" data-reveal>
-          <div class="when">O primeiro dia</div>
-          <h3>Um céu por testemunha</h3>
-          <p>Nos conhecemos em Neon, e o primeiro beijo veio sob o pôr do sol mais bonito do mundo.</p>
-        </article>
-        <article class="moment" data-reveal style="--d:.06s">
-          <div class="when">Serra</div>
-          <h3>As montanhas de Portugal</h3>
-          <p>Vento no cabelo, o vale inteiro embaixo e a certeza de que qualquer lugar serve, desde que seja a dois.</p>
-        </article>
-        <article class="moment" data-reveal style="--d:.12s">
-          <div class="when">A farda</div>
-          <h3>O dia mais orgulhoso</h3>
-          <p>Ele de gala, ela ao lado. Alguns dias a gente guarda inteiros, do jeitinho que aconteceram.</p>
-        </article>
-        <article class="moment" data-reveal style="--d:.18s">
-          <div class="when">Paris</div>
-          <h3>Castelo, pirâmide e frio</h3>
-          <p>Braços abertos na frente do castelo, mãos dadas no Louvre. Dois turistas insuportavelmente felizes.</p>
-        </article>
-        <article class="moment" data-reveal style="--d:.24s">
-          <div class="when">22.02.2027</div>
-          <h3>E então, você</h3>
-          <p>É onde esta parte da história espera por você — em Extremoz, no dia em que o para sempre começa.</p>
-        </article>
-      </div>
-    </div>
-  </section>
 
   <div class="floral" aria-hidden="true"></div>
 
@@ -712,7 +705,7 @@ footer small{
   <section class="day" id="cerimonia">
     <div class="wrap">
       <p class="eyebrow" data-reveal>O grande dia</p>
-      <h2 data-reveal data-split style="--d:.06s">Segunda-feira, 22 de fevereiro de 2027</h2>
+      <h2 data-reveal data-split style="--d:.06s">Quinta-feira, 25 de fevereiro de 2027</h2>
 
       <div class="cards">
         <div class="card" data-reveal>
@@ -725,16 +718,6 @@ footer small{
           </address>
           <p style="margin:0">Chegue com 20 minutos de antecedência, para entrar antes da noiva.</p>
           <a class="map" href="https://www.google.com/maps/search/?api=1&amp;query=Por+Amor+Recep%C3%A7%C3%B5es%2C+Av.+Litor%C3%A2nea%2C+1209%2C+Redinha%2C+Extremoz+-+RN" target="_blank" rel="noopener">Ver no mapa</a>
-        </div>
-        <div class="card" data-reveal style="--d:.1s">
-          <div class="hour">20h30</div>
-          <h3>Recepção</h3>
-          <address>
-            Mesmo endereço<br>
-            Jantar, música e dança<br>
-            até o dia clarear
-          </address>
-          <p style="margin:0">Estacionamento no local. À beira-mar, então leve algo para o vento.</p>
         </div>
       </div>
 
@@ -760,19 +743,19 @@ footer small{
 
       <div class="gallery">
         <figure data-reveal>
-          <div class="frame"><img src="assets/foto-serra.jpg" alt="Luiza e Henrique nas montanhas, com o vale ao fundo" loading="lazy"></div>
+          <div class="frame"><picture><source srcset="assets/foto-serra.webp" type="image/webp"><img src="assets/foto-serra.jpg" alt="Luiza e Henrique nas montanhas, com o vale ao fundo" width="900" height="1200" loading="lazy" decoding="async"></picture></div>
           <figcaption>Nas montanhas, com o vale inteiro embaixo</figcaption>
         </figure>
         <figure data-reveal style="--d:.08s">
-          <div class="frame"><img src="assets/foto-gala.jpg" alt="Henrique de uniforme de gala ao lado de Luiza" loading="lazy"></div>
+          <div class="frame"><picture><source srcset="assets/foto-gala.webp" type="image/webp"><img src="assets/foto-gala.jpg" alt="Henrique de uniforme de gala ao lado de Luiza" width="900" height="1200" loading="lazy" decoding="async"></picture></div>
           <figcaption>O dia da farda</figcaption>
         </figure>
         <figure data-reveal style="--d:.16s">
-          <div class="frame"><img src="assets/foto-castelo.jpg" alt="Luiza e Henrique de braços abertos em frente ao castelo" loading="lazy"></div>
+          <div class="frame"><picture><source srcset="assets/foto-castelo.webp" type="image/webp"><img src="assets/foto-castelo.jpg" alt="Luiza e Henrique de braços abertos em frente ao castelo" width="900" height="1600" loading="lazy" decoding="async"></picture></div>
           <figcaption>De braços abertos, em Paris</figcaption>
         </figure>
         <figure data-reveal style="--d:.24s">
-          <div class="frame"><img src="assets/foto-louvre.jpg" alt="Luiza e Henrique sentados em frente à pirâmide do Louvre" loading="lazy"></div>
+          <div class="frame"><picture><source srcset="assets/foto-louvre.webp" type="image/webp"><img src="assets/foto-louvre.jpg" alt="Luiza e Henrique sentados em frente à pirâmide do Louvre" width="900" height="1348" loading="lazy" decoding="async"></picture></div>
           <figcaption>Sentados no Louvre, sem pressa</figcaption>
         </figure>
       </div>
@@ -785,8 +768,8 @@ footer small{
 
 <footer>
   <div class="wrap">
-    <img class="foot-logo" src="assets/logo.png" alt="Monograma de Luiza e Henrique" data-reveal>
-    <p data-reveal style="--d:.06s">22 de fevereiro de 2027 &middot; Extremoz, Rio Grande do Norte</p>
+    <picture><source srcset="assets/logo.webp" type="image/webp"><img class="foot-logo" src="assets/logo.png" alt="Monograma de Luiza e Henrique" width="320" height="320" decoding="async" data-reveal></picture>
+    <p data-reveal style="--d:.06s">25 de fevereiro de 2027 &middot; Extremoz, Rio Grande do Norte</p>
     <p data-reveal style="--d:.12s"><em>Sob o céu mais bonito do mundo.</em></p>
     <small data-reveal style="--d:.18s">Luiza &amp; Henrique</small>
   </div>
@@ -798,7 +781,7 @@ footer small{
    ✎ CONFIGURAÇÃO RÁPIDA
    ═══════════════════════════════════════════════════════════ */
 const CONFIG = {
-  DATA_CASAMENTO: "2027-02-22T19:00:00",   // contagem regressiva
+  DATA_CASAMENTO: "2027-02-25T19:00:00",   // contagem regressiva
   // URL de um .mp3 para usar sua própria música.
   // Vazio = trilha ambiente gerada pelo navegador (sem arquivo externo).
   MUSICA_URL:     ""

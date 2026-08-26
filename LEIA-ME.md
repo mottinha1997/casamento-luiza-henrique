@@ -47,13 +47,23 @@ convite.
 
 | Arquivo | O que é | Onde aparece |
 |---|---|---|
-| `assets/hero-fundo.jpg` | a ilustração em aquarela de vocês | fundo da primeira dobra |
-| `assets/flores.png` | a guirlanda de peônias e rosas (com transparência) | pé do hero e divisores entre seções |
-| `assets/logo.png` | o monograma L&H | preloader, cabeçalho e rodapé |
-| `assets/foto-serra.jpg` | montanhas de Portugal | galeria |
-| `assets/foto-gala.jpg` | o dia da farda | galeria |
-| `assets/foto-castelo.jpg` | o castelo, em Paris | galeria |
-| `assets/foto-louvre.jpg` | o Louvre | galeria |
+| `hero-fundo` | a ilustração em aquarela de vocês | fundo da primeira dobra |
+| `hero-fundo-sm` | a mesma, em 1100px | fundo no celular (60KB no lugar de 180KB) |
+| `flores` | a guirlanda de peônias e rosas (com transparência) | pé do hero e divisores entre seções |
+| `logo` | o monograma L&H | preloader, cabeçalho, cartão do envelope e rodapé |
+| `foto-serra` | montanhas de Portugal | galeria |
+| `foto-gala` | o dia da farda | galeria |
+| `foto-castelo` | o castelo, em Paris | galeria |
+| `foto-louvre` | o Louvre | galeria |
+
+Cada imagem existe em duas versões: `.webp` (a que os navegadores baixam) e
+`.jpg`/`.png` (reserva para navegador antigo). O site pede sempre a WebP e cai
+na outra sozinho. **Ao trocar uma foto, gere as duas** — só o `.jpg` não basta,
+porque a WebP antiga continuaria sendo servida:
+
+```bash
+ffmpeg -i foto-nova.jpg -vf scale=900:-1 -c:v libwebp -quality 78 foto-serra.webp
+```
 
 Para trocar qualquer imagem, substitua o arquivo mantendo o mesmo nome — o site
 não precisa de nenhuma alteração. As fotos foram reduzidas para 1100px de
@@ -137,3 +147,23 @@ assets/          ilustração, guirlanda, monograma e fotos
 framer/          componente de embed para o Framer
 LEIA-ME.md       este arquivo
 ```
+
+## Peso e desempenho
+
+As imagens somavam 2,5 MB e agora somam 910 KB, com a mesma qualidade. O que
+entra antes de qualquer rolagem são só três arquivos: **338 KB no desktop e
+218 KB no celular** — as fotos da galeria carregam sob demanda, quando o
+visitante chega perto delas.
+
+O que faz isso funcionar, e que vale preservar ao mexer:
+
+- **WebP com reserva.** `<picture>` nas fotos e `image-set()` nos fundos CSS.
+- **Versão menor da ilustração no celular.** Uma tela de 375px não precisa de
+  uma imagem de 2200px.
+- **`loading="lazy"` nas fotos** e `width`/`height` declarados em toda imagem,
+  para a página não pular enquanto carrega.
+- **Preload do monograma e da guirlanda**, que aparecem antes de tudo.
+
+Uma pegadinha que já custou caro aqui: declarar `width`/`height` no `<img>` e
+depois definir só a largura no CSS faz o navegador usar a altura do atributo
+como altura fixa, e a imagem estica. Sempre acompanhe de `height:auto`.
