@@ -125,12 +125,13 @@ mel, jantar, casa nova...) para vocês substituírem pelos presentes de verdade.
 correspondente, dentro de `id="presentes"`:
 
 ```html
-<button class="gift-btn" type="button" data-nome="Lua de mel" data-valor="350,00">Presentear</button>
+<button class="gift-btn" type="button" data-nome="Lua de mel" data-valor="1.000,00">Presentear</button>
 ```
 
 `data-nome` e `data-valor` são o que aparece no título do modal — o valor é
-só uma sugestão, o Pix aceita qualquer quantia. Para um item de valor livre
-(sem sugestão), deixe `data-valor=""`, como no card "Contribuição livre".
+só uma sugestão, o Pix aceita qualquer quantia. Para um item sem sugestão de
+valor (o convidado escolhe livremente), deixe `data-valor=""` — o modal troca
+"Sugestão: R$ ..." por "Qualquer valor é bem-vindo" automaticamente.
 
 **Para trocar a chave Pix**, três lugares precisam mudar juntos:
 1. O código copia-e-cola dentro de `#pixCodigo`, no HTML.
