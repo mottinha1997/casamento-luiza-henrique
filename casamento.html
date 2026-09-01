@@ -492,6 +492,97 @@ p.lead{ font-size:var(--step-1); line-height:1.65; color:var(--brown); font-styl
   letter-spacing:.26em; text-indent:.26em; color:var(--ink-faint);
 }
 
+/* ═══ LISTA DE PRESENTES ══════════════════════════════════
+   Mesma estrutura visual do site antigo (casar.com): título em
+   script, grade de cards com ilustração + nome + preço + botão
+   "Presentear". O carrinho de compras e a ordenação de lá não
+   fazem sentido aqui — sem back-end, cada presente é uma
+   transação Pix independente, então cada card abre seu próprio
+   QR Code em vez de acumular itens numa sacola. */
+.gifts{ background: var(--paper-2); }
+.gifts .wrap{ max-width:920px; }
+.gift-grid{
+  display:grid; gap: clamp(1.4rem,3vw,2.2rem); margin-top:2.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.gift-card{
+  border:1px solid var(--paper-edge); background: rgba(255,252,244,.7);
+  padding: clamp(1.5rem,3vw,2rem) clamp(1.2rem,2.5vw,1.6rem);
+  display:grid; justify-items:center; gap:.6rem; text-align:center;
+  position:relative;
+}
+.gift-card::after{ content:""; position:absolute; inset:7px; border:1px solid var(--paper-edge); pointer-events:none; opacity:.5; }
+.gift-art{ width:88px; height:88px; margin-bottom:.2rem; }
+.gift-card h3{ font-size:var(--step-1); margin:0; }
+.gift-price{
+  font-family:var(--display); font-size:var(--step-1); color:var(--magenta);
+  margin:0;
+}
+.gift-btn{
+  font-family:var(--serif); font-size:var(--step--1);
+  text-transform:uppercase; letter-spacing:.24em; text-indent:.24em;
+  color:#fff; background:var(--brown); border:1px solid var(--brown);
+  padding:.7rem 1.6rem; margin-top:.4rem; cursor:pointer;
+  transition: background-color .35s var(--ease), border-color .35s var(--ease);
+}
+.gift-btn:hover, .gift-btn:focus-visible{ background:var(--magenta); border-color:var(--magenta); }
+.gift-note{ margin-top:2.4rem; font-size:var(--step--1); color:var(--ink-faint); font-style:italic; }
+
+/* ── Modal do Pix — abre ao clicar em qualquer "Presentear" ── */
+.pix-modal{
+  position:fixed; inset:0; z-index:90;
+  display:grid; place-items:center; padding: 1.2rem;
+  opacity:0; visibility:hidden;
+  transition: opacity .35s var(--ease), visibility .35s;
+}
+.pix-modal.aberto{ opacity:1; visibility:visible; }
+.pix-backdrop{
+  position:absolute; inset:0; background: rgba(59,42,26,.55);
+  backdrop-filter: blur(2px);
+}
+.pix-box{
+  position:relative; z-index:1; width:min(420px, 100%);
+  max-height: 90vh; overflow-y:auto;
+  background: var(--paper); border:1px solid var(--paper-edge);
+  padding: clamp(1.8rem,5vw,2.6rem); text-align:center;
+  display:grid; justify-items:center; gap:.7rem;
+  transform: translateY(14px) scale(.98); transition: transform .4s var(--ease-out);
+}
+.pix-modal.aberto .pix-box{ transform:none; }
+.pix-fechar{
+  position:absolute; top:.7rem; right:.7rem;
+  width:2.1rem; height:2.1rem; display:grid; place-items:center;
+  background:none; border:0; cursor:pointer;
+  font-family:var(--serif); font-size:1.4rem; line-height:1; color:var(--ink-faint);
+}
+.pix-fechar:hover{ color:var(--magenta); }
+.pix-box h3{ margin:0; font-size:var(--step-1); }
+.pix-valor{ font-family:var(--display); font-size:var(--step-2); color:var(--magenta); margin:0; }
+.pix-qr{
+  width:min(220px, 62vw); height:auto; margin:.4rem 0;
+  border:1px solid var(--paper-edge); padding:.7rem; background:#fff;
+}
+.pix-instrucao{ font-size:var(--step--1); color:var(--ink-soft); max-width:34ch; margin:0; }
+.pix-codigo-box{
+  width:100%; display:grid; gap:.6rem; margin-top:.4rem;
+}
+.pix-codigo{
+  display:block; width:100%; box-sizing:border-box;
+  font-family: ui-monospace, "SF Mono", Consolas, monospace; font-size:.72rem;
+  color:var(--ink-soft); background:var(--paper-2); border:1px solid var(--paper-edge);
+  padding:.6rem .7rem; word-break: break-all; text-align:left;
+}
+.pix-copiar{
+  font-family:var(--serif); font-size:var(--step--1);
+  text-transform:uppercase; letter-spacing:.24em; text-indent:.24em;
+  color:#fff; background:var(--brown); border:1px solid var(--brown);
+  padding:.75rem 1rem; cursor:pointer;
+  transition: background-color .3s var(--ease);
+}
+.pix-copiar:hover{ background:var(--magenta); border-color:var(--magenta); }
+.pix-copiar.copiado{ background:var(--leaf); border-color:var(--leaf); }
+.pix-chave{ font-size:.76rem; color:var(--ink-faint); margin:.3rem 0 0; }
+
 /* ═══ GALERIA ═════════════════════════════════════════════ */
 .gallery{ display:grid; gap: clamp(1.2rem,3vw,2.2rem); grid-template-columns:1fr; margin-top:2.8rem; }
 @media (min-width:560px){ .gallery{ grid-template-columns:repeat(2,1fr); } }
@@ -553,6 +644,27 @@ footer small{
     <feColorMatrix type="saturate" values="0"/>
     <feComponentTransfer><feFuncA type="linear" slope="0.08"/></feComponentTransfer>
   </filter>
+  <!-- manchas aquarela reaproveitadas atrás dos ícones da lista de presentes -->
+  <radialGradient id="g-rose" cx="42%" cy="38%" r="65%">
+    <stop offset="0%" stop-color="#F0AFC6" stop-opacity=".9"/>
+    <stop offset="70%" stop-color="#D9548A" stop-opacity=".55"/>
+    <stop offset="100%" stop-color="#D9548A" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="g-magenta" cx="42%" cy="38%" r="65%">
+    <stop offset="0%" stop-color="#DE84AB" stop-opacity=".9"/>
+    <stop offset="70%" stop-color="#C0286A" stop-opacity=".55"/>
+    <stop offset="100%" stop-color="#C0286A" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="g-sage" cx="42%" cy="38%" r="65%">
+    <stop offset="0%" stop-color="#9BC0A0" stop-opacity=".9"/>
+    <stop offset="70%" stop-color="#3F7A46" stop-opacity=".5"/>
+    <stop offset="100%" stop-color="#3F7A46" stop-opacity="0"/>
+  </radialGradient>
+  <radialGradient id="g-gold" cx="42%" cy="38%" r="65%">
+    <stop offset="0%" stop-color="#E8C27E" stop-opacity=".9"/>
+    <stop offset="70%" stop-color="#C9932F" stop-opacity=".55"/>
+    <stop offset="100%" stop-color="#C9932F" stop-opacity="0"/>
+  </radialGradient>
 </svg>
 
 <!-- Sem JS a cena do envelope não teria como se dissolver, e por ser
@@ -762,6 +874,111 @@ footer small{
     </div>
   </section>
 
+  <div class="floral flip" aria-hidden="true"></div>
+
+  <!-- ═══════════ LISTA DE PRESENTES ═══════════  ✎ EDITE: itens, valores e a chave Pix no <script> -->
+  <section class="gifts" id="presentes">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal>Lista de presentes</p>
+      <h2 data-reveal data-split style="--d:.06s">Se quiserem nos presentear</h2>
+      <p class="narrow" style="margin-inline:auto; text-align:center" data-reveal>
+        A presença de vocês já é o nosso maior presente. Mas quem quiser nos
+        ajudar a começar essa nova fase, pode escolher um item abaixo — o
+        pagamento é direto por Pix, sem cadastro.
+      </p>
+
+      <div class="gift-grid">
+        <article class="gift-card" data-reveal>
+          <svg class="gift-art" viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r="42" fill="url(#g-sage)" filter="url(#watercolor-fine)"/>
+            <g fill="none" stroke="var(--brown)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 62 L48 40 L80 58"/>
+              <path d="M30 58 L30 40 L42 40 L42 48"/>
+              <circle cx="66" cy="34" r="9"/>
+              <path d="M58 34 h16 M66 26 v16"/>
+            </g>
+          </svg>
+          <h3>Lua de mel</h3>
+          <p class="gift-price">R$ 350,00</p>
+          <button class="gift-btn" type="button" data-nome="Lua de mel" data-valor="350,00">Presentear</button>
+        </article>
+
+        <article class="gift-card" data-reveal style="--d:.06s">
+          <svg class="gift-art" viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r="42" fill="url(#g-magenta)" filter="url(#watercolor-fine)"/>
+            <g fill="none" stroke="var(--brown)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M40 30 v34 c0 8 -10 8 -10 16 h20 c0 -8 -10 -8 -10 -16"/>
+              <path d="M32 30 h16"/>
+              <path d="M65 34 v42"/>
+              <path d="M58 34 h14 l-2 20 h-10 z"/>
+            </g>
+          </svg>
+          <h3>Jantar romântico</h3>
+          <p class="gift-price">R$ 180,00</p>
+          <button class="gift-btn" type="button" data-nome="Jantar romântico" data-valor="180,00">Presentear</button>
+        </article>
+
+        <article class="gift-card" data-reveal style="--d:.12s">
+          <svg class="gift-art" viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r="42" fill="url(#g-gold)" filter="url(#watercolor-fine)"/>
+            <g fill="none" stroke="var(--brown)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M28 54 L50 34 L72 54"/>
+              <path d="M34 52 v22 h32 v-22"/>
+              <path d="M45 74 v-14 h10 v14"/>
+            </g>
+          </svg>
+          <h3>Casa nova</h3>
+          <p class="gift-price">R$ 250,00</p>
+          <button class="gift-btn" type="button" data-nome="Casa nova" data-valor="250,00">Presentear</button>
+        </article>
+
+        <article class="gift-card" data-reveal style="--d:.18s">
+          <svg class="gift-art" viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r="42" fill="url(#g-rose)" filter="url(#watercolor-fine)"/>
+            <g fill="none" stroke="var(--brown)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="30" y="46" width="40" height="28" rx="2"/>
+              <path d="M30 58 h40"/>
+              <path d="M50 46 v-8 c0 -6 8 -6 8 0 c0 6 -8 6 -8 0 c0 6 -8 6 -8 0 c0 -6 8 -6 8 0"/>
+            </g>
+          </svg>
+          <h3>Eletrodomésticos</h3>
+          <p class="gift-price">R$ 300,00</p>
+          <button class="gift-btn" type="button" data-nome="Eletrodomésticos" data-valor="300,00">Presentear</button>
+        </article>
+
+        <article class="gift-card" data-reveal style="--d:.24s">
+          <svg class="gift-art" viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r="42" fill="url(#g-sage)" filter="url(#watercolor-fine)"/>
+            <g fill="none" stroke="var(--brown)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M38 72 L40 50 h20 l2 22"/>
+              <path d="M50 50 v-8"/>
+              <path d="M50 42 c0 -10 -14 -10 -14 -22 c14 0 14 12 14 22"/>
+              <path d="M50 42 c0 -10 14 -10 14 -22 c-14 0 -14 12 -14 22"/>
+            </g>
+          </svg>
+          <h3>Decoração e enxoval</h3>
+          <p class="gift-price">R$ 200,00</p>
+          <button class="gift-btn" type="button" data-nome="Decoração e enxoval" data-valor="200,00">Presentear</button>
+        </article>
+
+        <article class="gift-card" data-reveal style="--d:.3s">
+          <svg class="gift-art" viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r="42" fill="url(#g-magenta)" filter="url(#watercolor-fine)"/>
+            <g fill="none" stroke="var(--brown)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="42" cy="50" r="14"/>
+              <circle cx="58" cy="50" r="14"/>
+            </g>
+          </svg>
+          <h3>Contribuição livre</h3>
+          <p class="gift-price">Você escolhe</p>
+          <button class="gift-btn" type="button" data-nome="Contribuição livre" data-valor="">Presentear</button>
+        </article>
+      </div>
+
+      <p class="gift-note" data-reveal>Todo valor é bem-vindo — o Pix aceita qualquer quantia, os valores acima são só uma sugestão.</p>
+    </div>
+  </section>
+
 </main>
 
 <div class="floral" aria-hidden="true"></div>
@@ -775,6 +992,30 @@ footer small{
   </div>
 </footer>
 </div><!-- /#scroll -->
+
+<!-- ═══ MODAL PIX — abre ao clicar em qualquer "Presentear" ═══
+     Fica FORA de #scroll de propósito: aquele container recebe um
+     transform (translate3d) para o scroll suave, e qualquer transform
+     cria um novo containing block — um position:fixed lá dentro passa
+     a se ancorar no #scroll (~8000px de altura) em vez da viewport, e
+     o modal nasce fora da área visível. Aqui ele fica como irmão de
+     #scroll, ancorado na janela de verdade. -->
+<div class="pix-modal" id="pixModal" aria-hidden="true">
+  <div class="pix-backdrop" data-fecha-pix></div>
+  <div class="pix-box" role="dialog" aria-modal="true" aria-labelledby="pixTitulo">
+    <button class="pix-fechar" type="button" data-fecha-pix aria-label="Fechar">&times;</button>
+    <p class="eyebrow" style="margin-bottom:.2rem">Presentear</p>
+    <h3 id="pixTitulo">—</h3>
+    <p class="pix-valor" id="pixValor"></p>
+    <img class="pix-qr" src="assets/pix-qr.svg" alt="QR Code Pix para presentear Luiza e Henrique" width="220" height="220">
+    <p class="pix-instrucao">Abra o app do seu banco, escolha pagar com Pix e escaneie o código — ou copie e cole abaixo.</p>
+    <div class="pix-codigo-box">
+      <code class="pix-codigo" id="pixCodigo">00020126580014BR.GOV.BCB.PIX0136877aee77-8456-4b8f-9d30-afdf57cddc705204000053039865802BR5925Maria Luiza Morais da Sil6009SAO PAULO62140510yAk2jb8FL16304D165</code>
+      <button class="pix-copiar" type="button" id="pixCopiar">Copiar código Pix</button>
+    </div>
+    <p class="pix-chave">Chave Pix — Maria Luiza Morais da Silva</p>
+  </div>
+</div>
 
 <script>
 /* ═══════════════════════════════════════════════════════════
@@ -1163,6 +1404,68 @@ const Musica = (() => {
     }
     requestAnimationFrame(loop);
   })();
+})();
+
+/* ═══ 7a. MODAL DO PIX ════════════════════════════════════
+   Sem back-end, cada "Presentear" abre o mesmo QR Code e o mesmo
+   código copia-e-cola — o Pix aceita valor livre, então o convidado
+   digita quanto quiser no próprio app do banco. O card só passa o
+   nome do presente e um valor sugerido pro título do modal. */
+const PixModal = (() => {
+  const modal  = document.getElementById("pixModal");
+  const titulo = document.getElementById("pixTitulo");
+  const valor  = document.getElementById("pixValor");
+  const codigo = document.getElementById("pixCodigo");
+  const botaoCopiar = document.getElementById("pixCopiar");
+  if (!modal) return;
+
+  let ultimoFoco = null;
+
+  function abrir(nome, valorSugerido){
+    titulo.textContent = nome;
+    valor.textContent = valorSugerido ? `Sugestão: R$ ${valorSugerido}` : "Qualquer valor é bem-vindo";
+    ultimoFoco = document.activeElement;
+    modal.classList.add("aberto");
+    modal.setAttribute("aria-hidden", "false");
+    document.documentElement.style.overflow = "hidden";
+    modal.querySelector(".pix-fechar").focus();
+  }
+
+  function fechar(){
+    modal.classList.remove("aberto");
+    modal.setAttribute("aria-hidden", "true");
+    document.documentElement.style.overflow = "";
+    if (ultimoFoco) ultimoFoco.focus();
+  }
+
+  document.querySelectorAll(".gift-btn").forEach(btn => {
+    btn.addEventListener("click", () => abrir(btn.dataset.nome, btn.dataset.valor));
+  });
+  modal.querySelectorAll("[data-fecha-pix]").forEach(el => el.addEventListener("click", fechar));
+  addEventListener("keydown", e => {
+    if (e.key === "Escape" && modal.classList.contains("aberto")) fechar();
+  });
+
+  botaoCopiar.addEventListener("click", async () => {
+    const texto = codigo.textContent.trim();
+    try {
+      await navigator.clipboard.writeText(texto);
+    } catch {
+      // clipboard bloqueado (ex.: http sem TLS): seleciona o texto pra
+      // copiar manualmente com Ctrl+C em vez de falhar silenciosamente
+      const range = document.createRange();
+      range.selectNodeContents(codigo);
+      const sel = getSelection();
+      sel.removeAllRanges(); sel.addRange(range);
+    }
+    const original = botaoCopiar.textContent;
+    botaoCopiar.textContent = "Código copiado ✓";
+    botaoCopiar.classList.add("copiado");
+    setTimeout(() => {
+      botaoCopiar.textContent = original;
+      botaoCopiar.classList.remove("copiado");
+    }, 2200);
+  });
 })();
 
 /* ═══ 8. SEQUÊNCIA DE ABERTURA ════════════════════════════

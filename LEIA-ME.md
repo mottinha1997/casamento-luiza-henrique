@@ -55,6 +55,11 @@ convite.
 | `foto-gala` | o dia da farda | galeria |
 | `foto-castelo` | o castelo, em Paris | galeria |
 | `foto-louvre` | o Louvre | galeria |
+| `pix-qr` | o QR Code do Pix (gerado a partir do código copia-e-cola) | modal "Presentear" |
+
+`pix-qr.svg` é diferente dos outros: não é foto, é gerado — trocar o arquivo
+sem regenerar o desenho deixa a imagem sem relação com o código Pix escrito ao
+lado dela. Veja "Lista de presentes e o Pix" logo abaixo para o passo a passo.
 
 Cada imagem existe em duas versões: `.webp` (a que os navegadores baixam) e
 `.jpg`/`.png` (reserva para navegador antigo). O site pede sempre a WebP e cai
@@ -96,6 +101,41 @@ Nenhum navegador deixa áudio começar sozinho. O site tenta tocar no fim do
 preload e, se for bloqueado, arma a trilha para entrar no primeiro toque,
 clique ou scroll do visitante — sem pedir nada a ele. O botão no topo direito
 liga e desliga a qualquer momento.
+
+### Lista de presentes e o Pix
+
+A seção reproduz o layout do site antigo no casar.com (título em script, grade
+de cards com imagem, nome, preço e um botão "Presentear"), mas sem o carrinho
+de compras nem o redirecionamento pro PayPal de lá — sem back-end, cada
+"Presentear" abre o mesmo QR Code Pix num modal, e o convidado escolhe quanto
+pagar direto no app do banco dele. Os itens são placeholders sérios (lua de
+mel, jantar, casa nova...) para vocês substituírem pelos presentes de verdade.
+
+**Para editar um item**, mude o bloco `<article class="gift-card">`
+correspondente, dentro de `id="presentes"`:
+
+```html
+<button class="gift-btn" type="button" data-nome="Lua de mel" data-valor="350,00">Presentear</button>
+```
+
+`data-nome` e `data-valor` são o que aparece no título do modal — o valor é
+só uma sugestão, o Pix aceita qualquer quantia. Para um item de valor livre
+(sem sugestão), deixe `data-valor=""`, como no card "Contribuição livre".
+
+**Para trocar a chave Pix**, três lugares precisam mudar juntos:
+1. O código copia-e-cola dentro de `#pixCodigo`, no HTML.
+2. A frase "Chave Pix — [nome]" logo abaixo, no HTML.
+3. **O QR Code** (`assets/pix-qr.svg`) — ele é uma imagem gerada a partir do
+   código antigo, então trocar só o texto não muda o desenho. Gere de novo com:
+
+```bash
+npx qrcode -o assets/pix-qr.svg -t svg "COLE_AQUI_O_NOVO_CODIGO_COPIA_E_COLA"
+```
+
+O código Pix carrega um checksum (CRC16) nos últimos 4 caracteres — se ele
+vier errado ou incompleto, o QR Code não vai funcionar em nenhum banco. Peça
+o código direto do app do banco (opção "copiar código Pix" na tela de
+recebimento), não digite ele à mão.
 
 ## Publicar
 
