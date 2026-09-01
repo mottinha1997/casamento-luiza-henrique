@@ -79,8 +79,10 @@ largura; se colocar originais de celular direto, a página fica pesada.
 Tudo que muda de casamento para casamento está marcado com `✎ EDITE` no arquivo.
 
 - **Nomes, história, endereços, horários** — direto no HTML, em português.
-- **Data da contagem regressiva e música** — no objeto `CONFIG`, no começo do
-  `<script>`.
+- **O versículo** — bloco `.verse` no topo da seção `id="convite"`. Referência
+  e texto ficam em parágrafos separados (`.verse-ref` e `.verse-texto`).
+- **Data da contagem regressiva e a música** — no objeto `CONFIG`, no começo
+  do `<script>`.
 - **Cores** — as variáveis no `:root`. `--paper` (`#FCF1DF`) foi amostrado da
   própria ilustração para o fundo da página emendar com a arte sem costura
   visível; `--brown` (`#573B25`) é o marrom do monograma e carrega todos os
@@ -88,19 +90,27 @@ Tudo que muda de casamento para casamento está marcado com `✎ EDITE` no arqui
 
 ### Música
 
-`CONFIG.MUSICA_URL` vazio = trilha ambiente sintetizada pelo próprio navegador
-(pad grave em Fá e arpejo pentatônico com reverb). Zero arquivo para hospedar.
+A trilha é um vídeo do YouTube, tocado pelo player oficial embutido e oculto
+na tela — só o áudio importa, o player não aparece em lugar nenhum. Baixar o
+áudio do YouTube para hospedar como arquivo aqui violaria os termos de uso da
+plataforma e os direitos autorais da música; o embed oficial é a forma
+correta de usar uma faixa específica sem hospedar cópia nenhuma.
 
-Para usar uma música sua, coloque a URL de um `.mp3`:
+Para trocar a música, troque o ID do vídeo em `CONFIG.YOUTUBE_ID` — é o
+trecho depois de `youtu.be/` (ou depois de `?v=`, num link `youtube.com/watch`):
 
 ```js
-MUSICA_URL: "https://seu-dominio.com/trilha.mp3"
+YOUTUBE_ID: "bq7CgXEXEoI"   // https://youtu.be/bq7CgXEXEoI
 ```
 
-Nenhum navegador deixa áudio começar sozinho. O site tenta tocar no fim do
-preload e, se for bloqueado, arma a trilha para entrar no primeiro toque,
-clique ou scroll do visitante — sem pedir nada a ele. O botão no topo direito
+Nenhum navegador libera autoplay com som sem gesto do visitante. O vídeo
+entra sozinho mudo assim que a página carrega, e o primeiro toque, clique ou
+scroll liga o som de verdade — sem pedir nada a ele. O botão no topo direito
 liga e desliga a qualquer momento.
+
+Como a trilha depende do YouTube, ela só funciona com internet e não toca no
+preview embutido do Artifact (que bloqueia scripts de fora por segurança) —
+no site publicado de verdade, funciona normalmente.
 
 ### Lista de presentes e o Pix
 

@@ -166,6 +166,14 @@ source{ display:none; }
 .sound.on .eq i:nth-child(4){ animation-delay:.45s; }
 @keyframes eq{ from{height:3px;} to{height:12px;} }
 
+/* player do YouTube: existe só pelo áudio, então fica fora da tela em
+   vez de invisível — display:none e visibility:hidden pausam a
+   reprodução em boa parte dos navegadores, offset de posição não */
+.yt-wrap{
+  position:fixed; left:-9999px; top:-9999px;
+  width:2px; height:2px; overflow:hidden;
+}
+
 /* ═══ SCROLL SUAVE ════════════════════════════════════════ */
 #scroll{ will-change:transform; }
 .smooth #scroll{ position:fixed; top:0; left:0; width:100%; }
@@ -414,7 +422,16 @@ p.lead{ font-size:var(--step-1); line-height:1.65; color:var(--brown); font-styl
   background-image: url("assets/flores.png");
   background-image: image-set(url("assets/flores.webp") type("image/webp"),
                               url("assets/flores.png")  type("image/png"));
-  background-size: 100% 100%;
+  /* Ao contrário de .floral, esta faixa NÃO tem aspect-ratio amarrado à
+     imagem — de propósito, ela mostra só um recorte baixo da guirlanda,
+     não a arte inteira. "100% 100%" esticava a imagem para caber numa
+     caixa com proporção diferente da dela (achatada em telas largas,
+     espichada em telas estreitas). "100% auto" escala preservando a
+     proporção real (1800×248) e o excesso de altura é cortado pela
+     caixa — a mesma técnica que .floral usava antes de ganhar
+     aspect-ratio, e o efeito visual pretendido aqui. */
+  background-size: 100% auto;
+  background-position: center bottom;
   background-repeat: no-repeat;
 }
 .hero-kicker{
@@ -447,6 +464,19 @@ p.lead{ font-size:var(--step-1); line-height:1.65; color:var(--brown); font-styl
 /* ═══ CONVITE ═════════════════════════════════════════════ */
 .invite{ text-align:center; }
 .invite .wrap{ max-width:64ch; }
+
+/* epígrafe bíblica, a primeira coisa lida depois do hero */
+.verse{ margin-bottom: clamp(2rem,5vw,3rem); }
+.verse-ref{
+  font-family:var(--serif); font-size:var(--step--1);
+  text-transform:uppercase; letter-spacing:.32em; text-indent:.32em;
+  color:var(--magenta); margin:0 0 .9rem;
+}
+.verse-texto{
+  font-family:var(--serif); font-style:italic; font-size:var(--step-1);
+  line-height:1.6; color:var(--ink-soft); margin:0;
+}
+
 .ornament{ display:flex; align-items:center; justify-content:center; gap:1rem; color:var(--line); margin-bottom:2rem; }
 .ornament::before, .ornament::after{ content:""; height:1px; flex:1; max-width:110px; background:currentColor; }
 .ornament svg{ width:24px; height:24px; color:var(--magenta); }
@@ -788,19 +818,26 @@ footer small{
     </div>
   </section>
 
-  <!-- ═══════════ CONVITE ═══════════ -->
+  <!-- ═══════════ CONVITE ═══════════  ✎ EDITE: versículo em .verse -->
   <section class="invite" id="convite">
     <div class="wrap">
-      <div class="ornament" data-reveal aria-hidden="true">
+      <div class="verse" data-reveal>
+        <p class="verse-ref">1 Coríntios 13:4-7</p>
+        <p class="verse-texto">“O amor é paciente, o amor é bondoso. Não inveja,<br>
+        não se vangloria, não se orgulha. Tudo sofre, tudo crê,<br>
+        tudo espera, tudo suporta.”</p>
+      </div>
+
+      <div class="ornament" data-reveal style="--d:.08s" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none"><path d="M12 3c2.5 3 4 5.5 4 8a4 4 0 1 1-8 0c0-2.5 1.5-5 4-8Z" fill="currentColor" opacity=".75"/><path d="M12 15v6" stroke="currentColor" stroke-width="1.2"/></svg>
       </div>
-      <p class="eyebrow" data-reveal style="--d:.06s">O convite</p>
-      <h2 data-reveal data-split style="--d:.12s">Sob o céu de Neon,<br>onde tudo começou</h2>
-      <p class="lead narrow" style="margin-inline:auto" data-reveal>
+      <p class="eyebrow" data-reveal style="--d:.14s">O convite</p>
+      <h2 data-reveal data-split style="--d:.18s">Sob o céu de Neon,<br>onde tudo começou</h2>
+      <p class="lead narrow" style="margin-inline:auto; --d:.26s" data-reveal>
         Se nos perguntassem onde começou a nossa história, a resposta seria
         simples: no céu da cidade de Neon.
       </p>
-      <p class="narrow" style="margin-inline:auto; --d:.1s" data-reveal>
+      <p class="narrow" style="margin-inline:auto; --d:.32s" data-reveal>
         Foi ali que nos conhecemos. E foi também ali que demos o nosso primeiro
         beijo, sob um céu maravilhoso, com o pôr do sol mais bonito do mundo a
         brilhar diante de nós. Naquele dia, talvez sem percebermos, o céu
@@ -993,6 +1030,13 @@ footer small{
 </footer>
 </div><!-- /#scroll -->
 
+<!-- Player do YouTube que toca a trilha de fundo — fora da tela, mas
+     nunca display:none, porque isso pausa a reprodução em vários
+     navegadores. Fica fora de #scroll pela mesma razão do modal Pix
+     logo abaixo: um elemento posicionado dentro de um ancestral com
+     transform se ancora nesse ancestral, não na janela.            -->
+<div class="yt-wrap" aria-hidden="true"><div id="yt-player"></div></div>
+
 <!-- ═══ MODAL PIX — abre ao clicar em qualquer "Presentear" ═══
      Fica FORA de #scroll de propósito: aquele container recebe um
      transform (translate3d) para o scroll suave, e qualquer transform
@@ -1023,9 +1067,9 @@ footer small{
    ═══════════════════════════════════════════════════════════ */
 const CONFIG = {
   DATA_CASAMENTO: "2027-02-25T19:00:00",   // contagem regressiva
-  // URL de um .mp3 para usar sua própria música.
-  // Vazio = trilha ambiente gerada pelo navegador (sem arquivo externo).
-  MUSICA_URL:     ""
+  // ID do vídeo do YouTube usado como trilha de fundo (a parte depois de
+  // youtu.be/ ou do ?v= — em https://youtu.be/bq7CgXEXEoI é "bq7CgXEXEoI").
+  YOUTUBE_ID:     "bq7CgXEXEoI"
 };
 
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -1234,99 +1278,20 @@ const Scroll = (() => {
 })();
 
 /* ═══ 5. MÚSICA DE FUNDO ══════════════════════════════════
-   Sem MUSICA_URL, a trilha é sintetizada na hora com Web Audio:
-   um pad grave em Fá e um arpejo pentatônico com reverb.      */
+   A trilha é o vídeo do YouTube em CONFIG.YOUTUBE_ID, tocado pelo
+   player oficial embutido (oculto na tela, só o áudio importa).
+   Baixar o áudio do YouTube para hospedar como arquivo aqui violaria
+   os termos de uso da plataforma e os direitos autorais da música;
+   o player embutido é a forma correta de usar uma faixa específica.
+
+   Nenhum navegador libera autoplay com som sem gesto do visitante.
+   O vídeo entra sozinho mudo (autoplay:1, mute:1 no player) assim
+   que a API carrega, e o primeiro toque, clique ou rolagem liga o
+   som de verdade — o mesmo comportamento que a trilha sintetizada
+   tinha antes, só que agora é a música de vocês.                  */
 const Musica = (() => {
-  let ctx, master, tocando = false, iniciado = false, tag;
-
-  function reverb(){
-    const dur = 3.2, n = ctx.sampleRate * dur;
-    const buf = ctx.createBuffer(2, n, ctx.sampleRate);
-    for (let c = 0; c < 2; c++){
-      const d = buf.getChannelData(c);
-      for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.6);
-    }
-    const cv = ctx.createConvolver(); cv.buffer = buf; return cv;
-  }
-
-  function nota(freq, t, dur, vol, dest){
-    const o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain();
-    o.type = "sine"; o2.type = "triangle";
-    o.frequency.value = freq; o2.frequency.value = freq * 2.002;
-    const g2 = ctx.createGain(); g2.gain.value = .18; o2.connect(g2).connect(g);
-    o.connect(g); g.connect(dest);
-    g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(vol, t + .06);
-    g.gain.exponentialRampToValueAtTime(.0001, t + dur);
-    o.start(t); o2.start(t); o.stop(t + dur + .1); o2.stop(t + dur + .1);
-  }
-
-  function construir(){
-    ctx = new (window.AudioContext || window.webkitAudioContext)();
-    master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination);
-
-    const rev = reverb(), wet = ctx.createGain();
-    wet.gain.value = .5; rev.connect(wet).connect(master);
-    const dry = ctx.createGain(); dry.gain.value = .55; dry.connect(master);
-    const bus = ctx.createGain(); bus.connect(rev); bus.connect(dry);
-
-    const filtro = ctx.createBiquadFilter();
-    filtro.type = "lowpass"; filtro.frequency.value = 480; filtro.Q.value = .7;
-    filtro.connect(bus);
-    [87.31, 130.81, 174.61].forEach((f, i) => {
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.type = "sine"; o.frequency.value = f * (i === 2 ? 1.001 : 1);
-      g.gain.value = .055 / (i + 1);
-      o.connect(g).connect(filtro); o.start();
-    });
-    const lfo = ctx.createOscillator(), lfoG = ctx.createGain();
-    lfo.frequency.value = .05; lfoG.gain.value = 160;
-    lfo.connect(lfoG).connect(filtro.frequency); lfo.start();
-
-    const escala = [349.23, 392.00, 440.00, 523.25, 587.33, 698.46, 783.99, 880.00];
-    let i = 0;
-    setInterval(() => {
-      if (!ctx || ctx.state !== "running") return;
-      const t = ctx.currentTime + .05;
-      nota(escala[(i * 3 + (Math.random() < .3 ? 1 : 0)) % escala.length], t, 4.5, .085, bus);
-      if (i % 4 === 0) nota(escala[i % 3] / 2, t + .2, 6, .05, bus);
-      i++;
-    }, 2600);
-  }
-
-  function fade(a, para, fim){
-    const de = a.volume, t0 = performance.now();
-    (function passo(t){
-      const k = Math.min((t - t0) / 1200, 1);
-      a.volume = Math.max(0, Math.min(1, de + (para - de) * k));
-      k < 1 ? requestAnimationFrame(passo) : fim && fim();
-    })(t0);
-  }
-
-  function ligar(){
-    if (CONFIG.MUSICA_URL){
-      if (!tag){ tag = new Audio(CONFIG.MUSICA_URL); tag.loop = true; tag.volume = 0; }
-      tag.play().then(() => { tocando = true; fade(tag, .35); marcar(); }).catch(() => {});
-      return;
-    }
-    if (!iniciado){ construir(); iniciado = true; }
-    ctx.resume().then(() => {
-      master.gain.cancelScheduledValues(ctx.currentTime);
-      master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
-      master.gain.linearRampToValueAtTime(.5, ctx.currentTime + 2.5);
-      tocando = true; marcar();
-    }).catch(() => {});
-  }
-
-  function desligar(){
-    if (CONFIG.MUSICA_URL && tag){ fade(tag, 0, () => tag.pause()); }
-    else if (ctx){
-      master.gain.cancelScheduledValues(ctx.currentTime);
-      master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
-      master.gain.linearRampToValueAtTime(0, ctx.currentTime + .8);
-    }
-    tocando = false; marcar();
-  }
+  const VOLUME = 55;
+  let player = null, tocando = false, pendente = false;
 
   const btn = document.getElementById("sound");
   const label = document.getElementById("sound-label");
@@ -1335,12 +1300,50 @@ const Musica = (() => {
     btn.setAttribute("aria-pressed", String(tocando));
     label.textContent = tocando ? "Som ligado" : "Música";
   }
+
+  function ligar(){
+    if (!player){ pendente = true; return; } // API ainda carregando: liga assim que ficar pronta
+    player.unMute();
+    player.setVolume(VOLUME);
+    player.playVideo();
+    tocando = true; marcar();
+  }
+
+  function desligar(){
+    pendente = false;
+    if (player) player.pauseVideo();
+    tocando = false; marcar();
+  }
+
   btn.addEventListener("click", () => tocando ? desligar() : ligar());
 
+  // a API só é injetada aqui — nenhum outro <script> externo no site
+  const scriptAPI = document.createElement("script");
+  scriptAPI.src = "https://www.youtube.com/iframe_api";
+  document.head.appendChild(scriptAPI);
+
+  window.onYouTubeIframeAPIReady = () => {
+    player = new YT.Player("yt-player", {
+      videoId: CONFIG.YOUTUBE_ID,
+      playerVars: {
+        autoplay: 1, mute: 1,
+        // loop:1 sozinho não repete um vídeo avulso — precisa da
+        // playlist apontando pro próprio vídeo, truque documentado da API
+        loop: 1, playlist: CONFIG.YOUTUBE_ID,
+        controls: 0, disablekb: 1, fs: 0, modestbranding: 1,
+        rel: 0, playsinline: 1
+      },
+      events: {
+        onReady(){
+          player.playVideo();
+          if (pendente) ligar();
+        }
+      }
+    });
+  };
+
   return {
-    // tenta tocar sozinha; se o navegador bloquear, espera o primeiro gesto
     autoIniciar(){
-      ligar();
       const gesto = () => {
         if (!tocando) ligar();
         ["pointerdown","keydown","wheel","touchstart"].forEach(e => removeEventListener(e, gesto));
